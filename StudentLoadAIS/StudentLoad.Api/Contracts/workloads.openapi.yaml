@@ -1,0 +1,243 @@
+openapi: 3.0.4
+info:
+  title: АИС «Управление студенческой нагрузкой»
+  version: 2.0.0
+  description: Контракты чтения нагрузки v1 и v2. Часы в ответах указаны целыми числами.
+servers:
+  - url: http://127.0.0.1:5188
+    description: Локальный учебный запуск
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/login:
+    post:
+      summary: Начать пользовательский сеанс
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Сеанс создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginReply'
+        '400':
+          description: Некорректное тело запроса
+        '401':
+          description: Неверные учётные данные
+        '429':
+          description: Превышен допустимый темп запросов входа
+  /api/v1/workloads:
+    get:
+      summary: Получить прежнее представление списка нагрузки
+      operationId: listWorkloadsV1
+      parameters:
+        - $ref: '#/components/parameters/SemesterId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/TeacherId'
+        - $ref: '#/components/parameters/Query'
+      responses:
+        '200':
+          description: Нагрузка, видимая текущему пользователю
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkloadV1'
+        '400':
+          description: Некорректный формат параметра запроса
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v2/workloads:
+    get:
+      summary: Получить детализированное представление списка нагрузки
+      operationId: listWorkloadsV2
+      parameters:
+        - $ref: '#/components/parameters/SemesterId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/TeacherId'
+        - $ref: '#/components/parameters/Query'
+      responses:
+        '200':
+          description: Нагрузка, видимая текущему пользователю
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkloadV2'
+        '400':
+          description: Некорректный формат параметра запроса
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v2/workloads/{id}:
+    get:
+      summary: Получить детализированное представление одной записи
+      operationId: readWorkloadV2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Запрошенная строка нагрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadV2'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Запись отсутствует в доступном пользователю наборе
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Непрозрачный токен, полученный при входе
+  responses:
+    Unauthorized:
+      description: Требуется действующий токен сеанса
+    Forbidden:
+      description: Доступ запрещён политикой сервера
+  parameters:
+    SemesterId:
+      name: semesterId
+      in: query
+      schema:
+        type: integer
+        format: int32
+    GroupId:
+      name: groupId
+      in: query
+      schema:
+        type: integer
+        format: int32
+    TeacherId:
+      name: teacherId
+      in: query
+      schema:
+        type: integer
+        format: int32
+    Query:
+      name: query
+      in: query
+      description: Поиск по группе, дисциплине, преподавателю или семестру
+      schema:
+        type: string
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          maxLength: 64
+        password:
+          type: string
+          format: password
+          writeOnly: true
+    LoginReply:
+      type: object
+      required: [accessToken, username, displayName, role, expiresAtUtc]
+      properties:
+        accessToken:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [Admin, Methodist, Dispatcher, Teacher]
+        expiresAtUtc:
+          type: string
+          format: date-time
+    WorkloadV1:
+      type: object
+      additionalProperties: false
+      required: [id, group, discipline, teacher, semester, hours]
+      properties:
+        id:
+          type: integer
+          format: int32
+        group:
+          type: string
+        discipline:
+          type: string
+        teacher:
+          type: string
+        semester:
+          type: string
+        hours:
+          type: integer
+          format: int32
+          description: Контактная нагрузка преподавателя, сумма лекций и практики
+    WorkloadV2:
+      type: object
+      required: [id, groupId, groupName, disciplineId, disciplineName, teacherId, teacherName, semesterId, semesterName,
+                 lectureHours, practicalHours, selfStudyHours, totalHours, studentHours, updatedAtUtc, revision]
+      properties:
+        id:
+          type: integer
+          format: int32
+        groupId:
+          type: integer
+          format: int32
+        groupName:
+          type: string
+        disciplineId:
+          type: integer
+          format: int32
+        disciplineName:
+          type: string
+        teacherId:
+          type: integer
+          format: int32
+        teacherName:
+          type: string
+        semesterId:
+          type: integer
+          format: int32
+        semesterName:
+          type: string
+        lectureHours:
+          type: integer
+          format: int32
+        practicalHours:
+          type: integer
+          format: int32
+        selfStudyHours:
+          type: integer
+          format: int32
+        totalHours:
+          type: integer
+          format: int32
+          description: Контактная нагрузка преподавателя, сумма лекций и практики
+        studentHours:
+          type: integer
+          format: int32
+          description: Сумма контактных часов и самостоятельной работы
+        updatedAtUtc:
+          type: string
+          format: date-time
+        revision:
+          type: integer
+          format: int32

@@ -1,0 +1,1 @@
+PASS DEMO: the out-of-box launcher copied SQLite, opened the published WinForms window, served an authenticated report for four teachers and stopped its own API when the window closed.

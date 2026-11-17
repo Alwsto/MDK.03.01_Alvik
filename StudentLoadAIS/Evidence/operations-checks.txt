@@ -1,0 +1,6 @@
+PASS UPDATE-01: published WinForms release 1.1.0-beta.2 installed via loopback, SHA-256 verified.
+PASS UPDATE-02: 1.1.0 superseded 1.1.0-beta.2, prior files retained.
+PASS UPDATE-03: repeat check leaves version 1.1.0 active.
+PASS UPDATE-04: mismatching SHA-256 rejected, the active version remained 1.1.0.
+PASS UPDATE-05: plain HTTP rejected when the loopback test switch is omitted.
+PASS BACKUP-01: online backup opened independently, integrity_check=ok; identical workload rows (6); zero FK violations.
